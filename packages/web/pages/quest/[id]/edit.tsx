@@ -2,7 +2,6 @@ import { Heading, LoadingState, useToast } from '@metafam/ds';
 import { convertToRaw } from 'draft-js';
 import draftToHtml from 'draftjs-to-html';
 import { getQuest } from 'graphql/getQuest';
-import htmlToDraft from 'html-to-draftjs';
 import { GetStaticPaths, GetStaticPropsContext } from 'next';
 import { useRouter } from 'next/router';
 import React from 'react';
