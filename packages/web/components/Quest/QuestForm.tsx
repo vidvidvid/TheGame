@@ -10,17 +10,18 @@ import {
   Text,
   VStack,
 } from '@metafam/ds';
+import { ContentState, EditorState } from 'draft-js';
 import {
   GuildFragmentFragment,
   QuestFragmentFragment,
   QuestRepetition_Enum,
   QuestStatus_Enum,
 } from 'graphql/autogen/types';
+import htmlToDraft from 'html-to-draftjs';
 import { useRouter } from 'next/router';
 import React, { useMemo, useState } from 'react';
 import { Controller, FieldError, useForm } from 'react-hook-form';
 
-// import draftToHtml from 'draftjs-to-html';
 import { QuestRepetitionHint, UriRegexp } from '../../utils/questHelpers';
 import { CategoryOption, SkillOption } from '../../utils/skillHelpers';
 import { FlexContainer } from '../Container';
@@ -55,7 +56,7 @@ const validations = {
 
 export interface CreateQuestFormInputs {
   title: string;
-  description: string | undefined | null;
+  description: EditorState;
   repetition: QuestRepetition_Enum;
   status: QuestStatus_Enum;
   guild_id: string | null;
@@ -69,27 +70,41 @@ const MetaFamGuildId = 'f94b7cd4-cf29-4251-baa5-eaacab98a719';
 const getDefaultFormValues = (
   editQuest: QuestFragmentFragment | undefined,
   guilds: GuildFragmentFragment[],
-): CreateQuestFormInputs => ({
-  title: editQuest?.title || '',
-  repetition: editQuest?.repetition || QuestRepetition_Enum.Unique,
-  description: editQuest?.description || '',
-  external_link: editQuest?.external_link || '',
-  guild_id:
-    editQuest?.guild_id ||
-    guilds.find((g) => g.id === MetaFamGuildId)?.id ||
-    guilds[0].id,
-  status: editQuest?.status || QuestStatus_Enum.Open,
-  cooldown: editQuest?.cooldown || null,
-  skills: editQuest
-    ? editQuest.quest_skills
-        .map((s) => s.skill)
-        .map((s) => ({
-          value: s.id,
-          label: s.name,
-          ...s,
-        }))
-    : [],
-});
+): CreateQuestFormInputs => {
+  let description = null;
+  if (editQuest && editQuest.description) {
+    const contentBlock = htmlToDraft(editQuest.description);
+    const contentState = ContentState.createFromBlockArray(
+      contentBlock.contentBlocks,
+    );
+    description = EditorState.createWithContent(contentState);
+  } else {
+    description = EditorState.createEmpty();
+  }
+
+  const defaultValues = {
+    title: editQuest?.title || '',
+    repetition: editQuest?.repetition || QuestRepetition_Enum.Unique,
+    description: description || EditorState.createEmpty(),
+    external_link: editQuest?.external_link || '',
+    guild_id:
+      editQuest?.guild_id ||
+      guilds.find((g) => g.id === MetaFamGuildId)?.id ||
+      guilds[0].id,
+    status: editQuest?.status || QuestStatus_Enum.Open,
+    cooldown: editQuest?.cooldown || null,
+    skills: editQuest
+      ? editQuest.quest_skills
+          .map((s) => s.skill)
+          .map((s) => ({
+            value: s.id,
+            label: s.name,
+            ...s,
+          }))
+      : [],
+  };
+  return defaultValues;
+};
 
 type FieldProps = {
   children: React.ReactNode;

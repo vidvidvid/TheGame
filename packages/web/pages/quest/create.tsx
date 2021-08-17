@@ -1,4 +1,6 @@
 import { MetaHeading, useToast } from '@metafam/ds';
+import { convertToRaw } from 'draft-js';
+import draftToHtml from 'draftjs-to-html';
 import {
   QuestRepetition_ActionEnum,
   useCreateQuestMutation,
@@ -21,6 +23,23 @@ import { parseSkills } from '../../utils/skillHelpers';
 
 type Props = InferGetStaticPropsType<typeof getStaticProps>;
 
+const extractFormData = (data: CreateQuestFormInputs) => {
+  const { skills, repetition, cooldown, ...createQuestInputs } = data;
+  const convertedDescription = draftToHtml(
+    convertToRaw(createQuestInputs.description.getCurrentContent()),
+  );
+  return {
+    skills,
+    repetition,
+    cooldown,
+    title: createQuestInputs.title,
+    description: convertedDescription,
+    status: createQuestInputs.status,
+    guild_id: createQuestInputs.guild_id,
+    external_link: createQuestInputs.external_link,
+  };
+};
+
 const CreateQuestPage: React.FC<Props> = ({ guilds, skillChoices }) => {
   useUser({ redirectTo: '/quests' });
   const router = useRouter();
@@ -28,13 +47,20 @@ const CreateQuestPage: React.FC<Props> = ({ guilds, skillChoices }) => {
   const [createQuestState, createQuest] = useCreateQuestMutation();
 
   const onSubmit = (data: CreateQuestFormInputs) => {
-    const { skills, repetition, cooldown, ...createQuestInputs } = data;
+    const {
+      skills,
+      repetition,
+      cooldown,
+      ...createQuestInputs
+    } = extractFormData(data);
+
     const input = {
       ...createQuestInputs,
       repetition: (data.repetition as unknown) as QuestRepetition_ActionEnum,
       cooldown: transformCooldownForBackend(cooldown, repetition),
       skills_id: skills.map((s) => s.id),
     };
+
     createQuest({
       input,
     }).then((response) => {

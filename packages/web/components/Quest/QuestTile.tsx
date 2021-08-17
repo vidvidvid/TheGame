@@ -64,9 +64,6 @@ export const QuestTile: React.FC<Props> = ({ quest }) => (
     </MetaTileHeader>
     <MetaTileBody flex={1}>
       <VStack spacing={2} align="stretch">
-        <Text textStyle="caption">DESCRIPTION</Text>
-        <Text noOfLines={4}>{quest.description}</Text>
-
         <Text textStyle="caption">SKILLS</Text>
         <SkillsTags
           skills={quest.quest_skills.map((s) => s.skill) as Skill[]}

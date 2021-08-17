@@ -1,5 +1,8 @@
 import { Heading, LoadingState, useToast } from '@metafam/ds';
+import { convertToRaw } from 'draft-js';
+import draftToHtml from 'draftjs-to-html';
 import { getQuest } from 'graphql/getQuest';
+import htmlToDraft from 'html-to-draftjs';
 import { GetStaticPaths, GetStaticPropsContext } from 'next';
 import { useRouter } from 'next/router';
 import React from 'react';
@@ -36,7 +39,9 @@ const EditQuestPage: React.FC<Props> = ({ quest, skillChoices, guilds }) => {
   const onSubmit = (data: CreateQuestFormInputs) => {
     const updateQuestInput = {
       title: data.title,
-      description: data.description,
+      description: draftToHtml(
+        convertToRaw(data.description.getCurrentContent()),
+      ),
       external_link: data.external_link,
       repetition: data.repetition,
       cooldown: transformCooldownForBackend(data.cooldown, data.repetition),
