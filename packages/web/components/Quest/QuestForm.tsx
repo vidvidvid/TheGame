@@ -10,14 +10,13 @@ import {
   Text,
   VStack,
 } from '@metafam/ds';
-import { ContentState, EditorState } from 'draft-js';
+import { ContentState, convertFromHTML, EditorState } from 'draft-js';
 import {
   GuildFragmentFragment,
   QuestFragmentFragment,
   QuestRepetition_Enum,
   QuestStatus_Enum,
 } from 'graphql/autogen/types';
-import htmlToDraft from 'html-to-draftjs';
 import { useRouter } from 'next/router';
 import React, { useMemo, useState } from 'react';
 import { Controller, FieldError, useForm } from 'react-hook-form';
@@ -73,9 +72,10 @@ const getDefaultFormValues = (
 ): CreateQuestFormInputs => {
   let description = null;
   if (editQuest && editQuest.description) {
-    const contentBlock = htmlToDraft(editQuest.description);
+    const blocksFromHTML = convertFromHTML(editQuest.description);
     const contentState = ContentState.createFromBlockArray(
-      contentBlock.contentBlocks,
+      blocksFromHTML.contentBlocks,
+      blocksFromHTML.entityMap,
     );
     description = EditorState.createWithContent(contentState);
   } else {
